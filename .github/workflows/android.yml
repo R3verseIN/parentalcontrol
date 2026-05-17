@@ -10,15 +10,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    env:
-      HAS_SECRETS: ${{ secrets.KEYSTORE_BASE64 != '' }}
-
     steps:
     - name: Checkout Codebase
       uses: actions/checkout@v4
 
     - name: Set up Build Credentials
-      if: env.HAS_SECRETS == 'true'
       run: |
         echo "${{ secrets.KEYSTORE_BASE64 }}" | tr -d '[:space:]' | base64 -d > release.keystore
         echo "storeFile=../release.keystore" > keystore.properties
@@ -27,23 +23,12 @@ jobs:
         echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> keystore.properties
 
     - name: Compile Signed Release APK in Sandboxed Docker
-      if: env.HAS_SECRETS == 'true'
       run: |
         chmod +x build.sh
         ./build.sh --release
 
-    - name: Compile Fallback Debug APK in Sandboxed Docker (Secrets Unconfigured)
-      if: env.HAS_SECRETS == 'false'
-      run: |
-        echo "=================================================="
-        echo "⚠️ WARNING: Repository secrets are not configured yet."
-        echo "Fallback: Building standard debug APK in Docker."
-        echo "=================================================="
-        chmod +x build.sh
-        ./build.sh
-
-    - name: Upload Compiled APK Artifact
+    - name: Upload Signed Release APK Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: parental-control-apk
-        path: artifacts/*.apk
+        name: parental-control-signed-release
+        path: artifacts/app-release.apk
