@@ -6,12 +6,12 @@ on:
   pull_request:
     branches: [ "main" ]
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
-
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    env:
+      HAS_SECRETS: ${{ secrets.KEYSTORE_BASE64 != '' }}
 
     steps:
     - name: Checkout Codebase
@@ -28,10 +28,12 @@ jobs:
       run: chmod +x gradlew
 
     - name: Decode Keystore Binary from GitHub Secret
+      if: env.HAS_SECRETS == 'true'
       run: |
         echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > release.keystore
 
     - name: Dynamically Create keystore.properties credentials file
+      if: env.HAS_SECRETS == 'true'
       run: |
         echo "storeFile=../release.keystore" > keystore.properties
         echo "storePassword=${{ secrets.KEYSTORE_PASSWORD }}" >> keystore.properties
@@ -39,10 +41,20 @@ jobs:
         echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> keystore.properties
 
     - name: Compile Signed Release APK Build
+      if: env.HAS_SECRETS == 'true'
       run: ./gradlew assembleRelease
 
-    - name: Upload Signed Release APK Artifact
+    - name: Compile Fallback Debug APK Build (Secrets Unconfigured)
+      if: env.HAS_SECRETS == 'false'
+      run: |
+        echo "=================================================="
+        echo "⚠️ WARNING: Repository secrets are not configured yet."
+        echo "Fallback: Building standard debug APK instead."
+        echo "=================================================="
+        ./gradlew assembleDebug
+
+    - name: Upload Compiled APK Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: parental-control-signed-release
-        path: app/build/outputs/apk/release/app-release.apk
+        name: parental-control-apk
+        path: app/build/outputs/apk/**/*.apk
