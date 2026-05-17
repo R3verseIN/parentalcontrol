@@ -1,0 +1,30 @@
+# Android Gradle build files and directories
+.gradle/
+build/
+/*/build/
+.cxx/
+local.properties
+
+# Android Studio IDE files
+.idea/
+*.iml
+*.iws
+*.ipr
+.navigation/
+captures/
+.externalNativeBuild/
+
+# Private keystores & signing credentials (CRITICAL FOR SECURITY!)
+*.jks
+*.keystore
+keystore.properties
+
+# Gradle caches
+.gradle-caches/
+
+# System specific files
+.DS_Store
+Thumbs.db
+
+# Local artifacts output
+artifacts/*

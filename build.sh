@@ -6,6 +6,7 @@ set -e
 # Default task is to build the full APK
 BUILD_TASK="assembleDebug"
 IS_CHECK_ONLY=false
+IS_RELEASE=false
 
 # Parse flags
 for arg in "$@"
@@ -14,6 +15,11 @@ do
         -c|--check)
         BUILD_TASK="compileDebugKotlin"
         IS_CHECK_ONLY=true
+        shift
+        ;;
+        -r|--release)
+        BUILD_TASK="assembleRelease"
+        IS_RELEASE=true
         shift
         ;;
     esac
@@ -25,6 +31,8 @@ python3 validate_assets.py
 echo "=================================================="
 if [ "$IS_CHECK_ONLY" = true ] ; then
     echo "🔍 Checking Kotlin & Java Syntax in Docker (No Mounts)"
+elif [ "$IS_RELEASE" = true ] ; then
+    echo "🏗️ Building Signed Release APK in Docker (No Mounts)"
 else
     echo "🏗️ Building Parental Control APK in Docker (No Mounts)"
 fi
@@ -49,14 +57,22 @@ fi
 echo "📦 Step 2: Creating temporary container..."
 CONTAINER_ID=$(docker create parental-control-builder)
 
-# Step 3: Copy the compiled debug APK from the container into our artifacts folder
+# Step 3: Copy the compiled APK from the container into our artifacts folder
 echo "💾 Step 3: Copying APK to local artifacts/ directory..."
-docker cp $CONTAINER_ID:/app/app/build/outputs/apk/debug/app-debug.apk ./artifacts/app-debug.apk
+if [ "$IS_RELEASE" = true ] ; then
+    docker cp $CONTAINER_ID:/app/app/build/outputs/apk/release/app-release.apk ./artifacts/app-release.apk
+else
+    docker cp $CONTAINER_ID:/app/app/build/outputs/apk/debug/app-debug.apk ./artifacts/app-debug.apk
+fi
 
 # Step 4: Delete the temporary container
 echo "🧹 Step 4: Cleaning up temporary container..."
 docker rm -v $CONTAINER_ID
 
 echo "=================================================="
-echo "🎉 Build Success! APK copied to: ./artifacts/app-debug.apk"
+if [ "$IS_RELEASE" = true ] ; then
+    echo "🎉 Build Success! Signed Release APK copied to: ./artifacts/app-release.apk"
+else
+    echo "🎉 Build Success! APK copied to: ./artifacts/app-debug.apk"
+fi
 echo "=================================================="
