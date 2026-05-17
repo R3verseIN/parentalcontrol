@@ -52,13 +52,36 @@
                 android:layout_marginTop="2dp"
                 android:ellipsize="end"
                 android:singleLine="true" />
+
+            <TextView
+                android:id="@+id/tvAppScheduleStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="No Restrictions"
+                android:textColor="#80FFFFFF"
+                android:textSize="10sp"
+                android:layout_marginTop="2dp"
+                android:ellipsize="end"
+                android:singleLine="true" />
         </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/btnConfigureSchedule"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_marginStart="8dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Configure Schedule"
+            android:padding="6dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_timer"
+            app:tint="#B3FFFFFF" />
 
         <androidx.appcompat.widget.SwitchCompat
             android:id="@+id/switchBlocked"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
+            android:layout_marginStart="8dp"
             android:text=""
             app:showText="false" />
 

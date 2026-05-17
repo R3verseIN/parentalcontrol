@@ -250,12 +250,12 @@
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
-    <!-- 3. Future Tools Premium Teaser Grid -->
+    <!-- 3. Active Parental Modules -->
     <TextView
         android:id="@+id/tvAdvancedTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Parental Modules (Incoming)"
+        android:text="Parental Modules"
         android:textColor="#80FFFFFF"
         android:textSize="14sp"
         android:textStyle="bold"
@@ -263,101 +263,75 @@
         app:layout_constraintTop_toBottomOf="@id/cardSecurity"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <LinearLayout
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardAppGuard"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:orientation="horizontal"
+        android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="2dp"
+        app:cardBackgroundColor="#1E1E1E"
+        app:strokeColor="#335E5CE6"
+        app:strokeWidth="1dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:foreground="?android:attr/selectableItemBackground"
         app:layout_constraintTop_toBottomOf="@id/tvAdvancedTitle"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <!-- Module 1: App Blocker -->
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/cardAppBlocker"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:layout_marginEnd="8dp"
-            app:cardCornerRadius="12dp"
-            app:cardBackgroundColor="#1A1E1E1E"
-            android:clickable="true"
-            android:focusable="true"
-            android:foreground="?android:attr/selectableItemBackground">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="20dp">
+
+            <FrameLayout
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="@drawable/btn_round"
+                android:backgroundTint="#265E5CE6"
+                android:layout_marginEnd="16dp">
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_shield"
+                    app:tint="#5E5CE6"
+                    android:layout_gravity="center" />
+            </FrameLayout>
 
             <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="vertical"
-                android:padding="16dp"
-                android:gravity="center">
-
-                <FrameLayout
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:background="@drawable/btn_round"
-                    android:backgroundTint="#26FF8A80"
-                    android:layout_gravity="center_horizontal">
-                    <ImageView
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:src="@drawable/ic_block"
-                        app:tint="#FF8A80"
-                        android:layout_gravity="center" />
-                </FrameLayout>
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="App Blocker"
+                    android:text="App &amp; Time Restriction Guard"
                     android:textColor="#FFFFFF"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:layout_marginTop="8dp" />
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <!-- Module 2: Screen Scheduler -->
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:layout_marginStart="8dp"
-            app:cardCornerRadius="12dp"
-            app:cardBackgroundColor="#1A1E1E1E">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="vertical"
-                android:padding="16dp"
-                android:gravity="center">
-
-                <FrameLayout
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:background="@drawable/btn_round"
-                    android:backgroundTint="#26D0BCFF"
-                    android:layout_gravity="center_horizontal">
-                    <ImageView
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:src="@drawable/ic_timer"
-                        app:tint="#D0BCFF"
-                        android:layout_gravity="center" />
-                </FrameLayout>
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
 
                 <TextView
+                    android:id="@+id/tvAppGuardStats"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Schedules"
-                    android:textColor="#FFFFFF"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:layout_marginTop="8dp" />
+                    android:text="0 apps restricted | 0 active schedules"
+                    android:textColor="#80FFFFFF"
+                    android:textSize="12sp"
+                    android:layout_marginTop="4dp" />
             </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-    </LinearLayout>
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/ic_arrow_back"
+                android:rotation="180"
+                app:tint="#80FFFFFF" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

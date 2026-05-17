@@ -48,14 +48,17 @@ class ParentalAccessibilityService : AccessibilityService() {
                 }
             }
 
-            // Check if the foreground application is blocked in parental settings
-            if (BlocklistManager.isBlocked(packageName)) {
+            // Check if the foreground application is blocked in parental settings (permanently or by schedule)
+            val isPermanentlyBlocked = BlocklistManager.isBlocked(packageName)
+            val isScheduledBlocked = BlocklistManager.isCurrentlyInBlockedSchedule(packageName)
+
+            if (isPermanentlyBlocked || isScheduledBlocked) {
                 // If it is in the unlocked session list, allow it to run
                 if (unlockedPackages.contains(packageName)) {
                     return
                 }
 
-                Log.w(TAG, "Intercepted execution of blocked app: $packageName. Launching lock screen overlay.")
+                Log.w(TAG, "Intercepted execution of blocked app: $packageName (Permanent: $isPermanentlyBlocked, Scheduled: $isScheduledBlocked). Launching lock screen overlay.")
                 currentlyBlockingPackage = packageName // Cache package name
                 launchLockGatekeeper()
                 return

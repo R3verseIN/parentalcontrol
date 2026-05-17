@@ -33,7 +33,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvUninstallDesc: TextView
     private lateinit var btnEnableUninstallProtection: Button
 
-    private lateinit var cardAppBlocker: MaterialCardView
+    private lateinit var cardAppGuard: MaterialCardView
+    private lateinit var tvAppGuardStats: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,13 +54,14 @@ class MainActivity : AppCompatActivity() {
         tvUninstallDesc = findViewById(R.id.tvUninstallDesc)
         btnEnableUninstallProtection = findViewById(R.id.btnEnableUninstallProtection)
 
-        cardAppBlocker = findViewById(R.id.cardAppBlocker)
+        cardAppGuard = findViewById(R.id.cardAppGuard)
+        tvAppGuardStats = findViewById(R.id.tvAppGuardStats)
 
         // Initialize persistent App Blocker memory
         com.parentalcontrol.security.BlocklistManager.init(this)
 
         // Launch App Blocker settings on card click
-        cardAppBlocker.setOnClickListener {
+        cardAppGuard.setOnClickListener {
             val intent = Intent(this, AppBlockerActivity::class.java)
             startActivity(intent)
         }
@@ -98,6 +100,16 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         checkAccessibilityStatus()
         checkDeviceAdminStatus()
+        updateAppGuardStats()
+    }
+
+    /**
+     * Dynamically update the app and schedule statistics displayed on the main dashboard card.
+     */
+    private fun updateAppGuardStats() {
+        val blockedCount = com.parentalcontrol.security.BlocklistManager.getBlockedAppsCount()
+        val schedulesCount = com.parentalcontrol.security.BlocklistManager.getActiveSchedulesCount()
+        tvAppGuardStats.text = "$blockedCount apps restricted | $schedulesCount active schedules"
     }
 
     /**

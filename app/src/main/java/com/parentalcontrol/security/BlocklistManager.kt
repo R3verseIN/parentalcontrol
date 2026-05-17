@@ -63,4 +63,87 @@ object BlocklistManager {
             prefs.edit().putStringSet(KEY_BLOCKED_PACKAGES, currentSet).apply()
         }
     }
+
+    /**
+     * Retrieve the list of scheduled block ranges for an app.
+     */
+    fun getBlockedSchedules(packageName: String): Set<String> {
+        checkInit()
+        return prefs.getStringSet("schedule_$packageName", emptySet()) ?: emptySet()
+    }
+
+    /**
+     * Save the list of scheduled block ranges for an app.
+     */
+    fun saveBlockedSchedules(packageName: String, schedules: Set<String>) {
+        checkInit()
+        prefs.edit().putStringSet("schedule_$packageName", schedules).apply()
+    }
+
+    /**
+     * Mathematically checks if the current time falls inside any scheduled block window.
+     */
+    fun isCurrentlyInBlockedSchedule(packageName: String?): Boolean {
+        if (packageName.isNullOrEmpty()) return false
+        val schedules = getBlockedSchedules(packageName)
+        if (schedules.isEmpty()) return false
+
+        val now = java.util.Calendar.getInstance()
+        val currentMinutes = now.get(java.util.Calendar.HOUR_OF_DAY) * 60 + now.get(java.util.Calendar.MINUTE)
+
+        for (range in schedules) {
+            val parts = range.split("-")
+            if (parts.size != 2) continue
+            
+            val startParts = parts[0].split(":")
+            val endParts = parts[1].split(":")
+            if (startParts.size != 2 || endParts.size != 2) continue
+
+            val startMin = startParts[0].toIntOrNull() ?: continue
+            val startMinuteVal = startParts[1].toIntOrNull() ?: continue
+            val endMin = endParts[0].toIntOrNull() ?: continue
+            val endMinuteVal = endParts[1].toIntOrNull() ?: continue
+
+            val startTotalMinutes = startMin * 60 + startMinuteVal
+            val endTotalMinutes = endMin * 60 + endMinuteVal
+
+            if (startTotalMinutes <= endTotalMinutes) {
+                // Standard range, e.g. 08:00 - 14:00
+                if (currentMinutes in startTotalMinutes..endTotalMinutes) {
+                    return true
+                }
+            } else {
+                // Overnight range, e.g. 21:00 - 07:00
+                if (currentMinutes >= startTotalMinutes || currentMinutes <= endTotalMinutes) {
+                    return true
+                }
+            }
+        }
+        return false
+    }
+
+    /**
+     * Get the count of persistently blocked applications.
+     */
+    fun getBlockedAppsCount(): Int {
+        return getBlockedPackages().size
+    }
+
+    /**
+     * Get the count of applications that have active custom schedules.
+     */
+    fun getActiveSchedulesCount(): Int {
+        checkInit()
+        var count = 0
+        val allEntries = prefs.all
+        for ((key, value) in allEntries) {
+            if (key.startsWith("schedule_")) {
+                val scheduleSet = value as? Set<*>
+                if (!scheduleSet.isNullOrEmpty()) {
+                    count++
+                }
+            }
+        }
+        return count
+    }
 }
