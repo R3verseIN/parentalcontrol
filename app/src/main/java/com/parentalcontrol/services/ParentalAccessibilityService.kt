@@ -5,12 +5,17 @@ import android.content.Intent
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
+import com.parentalcontrol.security.BlocklistManager
 import com.parentalcontrol.ui.PinActivity
 
 class ParentalAccessibilityService : AccessibilityService() {
 
     companion object {
         private const val TAG = "ParentalAccessService"
+
+        // Timestamp to temporarily bypass settings blocking (15-second grace window for uninstallation)
+        @JvmStatic
+        var bypassSafeguardUntil: Long = 0
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
@@ -21,8 +26,21 @@ class ParentalAccessibilityService : AccessibilityService() {
             val packageName = event.packageName?.toString()
             Log.d(TAG, "Foreground App Shift: $packageName")
             
+            // Check if the foreground application is blocked in parental settings
+            if (BlocklistManager.isBlocked(packageName)) {
+                Log.w(TAG, "Intercepted execution of blocked app: $packageName. Launching lock screen overlay.")
+                launchLockGatekeeper()
+                return
+            }
+            
             // Secure Settings Safeguard Block
             if (packageName == "com.android.settings") {
+                // If the parent has recently entered the correct PIN, allow settings bypass
+                if (System.currentTimeMillis() < bypassSafeguardUntil) {
+                    Log.d(TAG, "Grace period active. Allowing settings deactivation.")
+                    return
+                }
+
                 // Only block if Device Admin is ALREADY active!
                 val dpm = getSystemService(android.content.Context.DEVICE_POLICY_SERVICE) as android.app.admin.DevicePolicyManager
                 val cn = android.content.ComponentName(this, com.parentalcontrol.security.ParentalDeviceAdminReceiver::class.java)
@@ -69,6 +87,7 @@ class ParentalAccessibilityService : AccessibilityService() {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
             putExtra(PinActivity.EXTRA_MODE, PinActivity.MODE_UNLOCK)
+            putExtra("is_interception", true)
         }
         startActivity(intent)
     }
@@ -79,6 +98,7 @@ class ParentalAccessibilityService : AccessibilityService() {
 
     override fun onServiceConnected() {
         super.onServiceConnected()
+        BlocklistManager.init(this)
         Log.d(TAG, "Accessibility Service Connected Successfully!")
     }
 }

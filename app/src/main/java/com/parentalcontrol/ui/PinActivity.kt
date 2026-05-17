@@ -174,7 +174,14 @@ class PinActivity : AppCompatActivity() {
      */
     private fun handleUnlockFlow(enteredPin: String) {
         if (pinManager.verifyPin(enteredPin)) {
-            navigateToMain()
+            val isInterception = intent.getBooleanExtra("is_interception", false)
+            if (isInterception) {
+                // Set the 15-second grace window to allow the parent to safely modify settings or uninstall the app
+                com.parentalcontrol.services.ParentalAccessibilityService.bypassSafeguardUntil = System.currentTimeMillis() + 15000
+                finish()
+            } else {
+                navigateToMain()
+            }
         } else {
             tvSubtitle.text = "Incorrect PIN. Please try again."
         }
@@ -197,6 +204,21 @@ class PinActivity : AppCompatActivity() {
         } else {
             // Phase 3.2: Re-use setup logic flow to establish the new PIN
             handleSetupFlow(enteredPin)
+        }
+    }
+
+    override fun onBackPressed() {
+        val isInterception = intent.getBooleanExtra("is_interception", false)
+        if (currentMode == MODE_UNLOCK && isInterception) {
+            // Redirect to Home screen instead of finishing and exposing the blocked app
+            val homeIntent = Intent(Intent.ACTION_MAIN).apply {
+                addCategory(Intent.CATEGORY_HOME)
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
+            startActivity(homeIntent)
+            finish()
+        } else {
+            super.onBackPressed()
         }
     }
 

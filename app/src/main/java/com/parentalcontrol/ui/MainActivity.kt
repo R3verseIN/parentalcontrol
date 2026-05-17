@@ -33,6 +33,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvUninstallDesc: TextView
     private lateinit var btnEnableUninstallProtection: Button
 
+    private lateinit var cardAppBlocker: MaterialCardView
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -50,6 +52,17 @@ class MainActivity : AppCompatActivity() {
         tvUninstallTitle = findViewById(R.id.tvUninstallTitle)
         tvUninstallDesc = findViewById(R.id.tvUninstallDesc)
         btnEnableUninstallProtection = findViewById(R.id.btnEnableUninstallProtection)
+
+        cardAppBlocker = findViewById(R.id.cardAppBlocker)
+
+        // Initialize persistent App Blocker memory
+        com.parentalcontrol.security.BlocklistManager.init(this)
+
+        // Launch App Blocker settings on card click
+        cardAppBlocker.setOnClickListener {
+            val intent = Intent(this, AppBlockerActivity::class.java)
+            startActivity(intent)
+        }
 
         // Request Device Admin anti-uninstall prompt
         btnEnableUninstallProtection.setOnClickListener {

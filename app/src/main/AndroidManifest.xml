@@ -25,6 +25,12 @@
             android:exported="false"
             android:screenOrientation="portrait" />
 
+        <!-- App Blocker Selector Activity -->
+        <activity
+            android:name=".ui.AppBlockerActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
         <!-- Parental Control Accessibility Service -->
         <service
             android:name=".services.ParentalAccessibilityService"
