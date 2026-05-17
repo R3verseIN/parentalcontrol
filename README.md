@@ -1,53 +1,106 @@
-# 🛡️ Parental Control Android Application
+# Parental Control Android Application
 
-A premium, secure, and modern Android Parental Control application. 
+A secure, high-fidelity Android application for parental control, device monitoring, and app locking. The application features a customized dark-mode dashboard console, real-time parent credential locks, local SHA-256 PIN hashing, and package visibility configurations.
 
-This repository is structured for native Kotlin/Java development on Android, featuring a secure **SHA-256 parent credential lock** and real-time **system accessibility service** state monitoring.
+## Visual Identity
+
+### Launcher Icon Mockup
+![Parental Control App Icon](images/parental_control_app_icon.png)
+
+### Application Screenshots
+![Dashboard Screen](images/1.jpeg)
+![App Blocker Screen](images/2.jpeg)
+![Permissions Setup](images/3.jpeg)
 
 ---
 
-## 🏗️ Technical Stack & Architecture
-
-- ☕ **Language**: Kotlin
-- 🎨 **Theme**: Modern charcoal dark-mode (`#121212`) with customized glassmorphic card overlays
-- 🔒 **Security**: SHA-256 PIN hashing stored locally via `SharedPreferences`
-- 🤖 **Parental Service**: Dedicated `AccessibilityService` hook to monitor application focus changes
+## Features
+* Modern dark-mode dashboard console with rounded MaterialCardView status badges.
+* Integrated accessibility service framework for real-time focus monitoring and app blocking.
+* Self-signed secure PKCS12 release keystore and credentials generation.
+* Bulletproof local git exclusion rules protecting dynamic credentials.
+* Package Visibility configuration enabling list queries for all third-party installed packages on Android 11+ (API 30+).
+* Automated Docker compilation scripts for sandboxed release packaging.
+* Built-in GitHub Actions CI/CD workflows for remote signed release compilation.
 
 ---
 
-## 🛠️ Automated Sandbox Compiler (Docker-based)
+## Directory Structure
+* `app/` - Core Android application module containing Kotlin sources and resources.
+* `artifacts/` - Output directory for compiled application packages (ignored by Git).
+* `.github/workflows/` - GitHub Actions CI/CD pipeline declarations.
+* `build.sh` - Host helper script compiling and packaging applications inside a Docker container.
+* `generate_keystore.py` - Automated key utility generating keystores, dynamic Gradle configurations, and printing GitHub Base64 secrets.
 
-To avoid installing Java JDK 17, Android SDK platforms, build-tools, or Gradle on your physical machine, we have packaged an **automated, self-contained compiler pipeline**.
+---
 
-This pipeline compiles your code in an isolated temporary Docker container (with zero local mounts or port binds), extracts the compiled APK, and tidies up after itself.
+## Local Development and Compilation
 
-### Prerequisites
-Make sure you have **Docker** installed and running on your host system:
-```bash
-docker --version
-```
+### Compilation Requirements
+* Docker engine installed and running.
+* ADB command-line utility for physical device deployment.
 
-### ⚡ Compile and Extract the APK in One Command
-Simply run the helper script from your terminal:
+### 1. Compile Debug Application Package (APK)
+To run pre-flight syntax checks, compile the application inside a sandboxed Docker container, and extract the unsigned debug package, run:
 ```bash
 ./build.sh
 ```
+The output APK is stored at: `artifacts/app-debug.apk`.
 
-### What this script does:
-1. Builds a secure, sandboxed builder image (`Dockerfile.build`) containing the exact required versions of JDK 17 and Android SDK.
-2. Compiles your complete Android app inside the container and generates the debug APK.
-3. Automatically extracts the `.apk` and copies it directly to your local **`artifacts`** folder:
-   - File path: [`artifacts/app-debug.apk`](file:///home/r3versein/Documents/Projects/parentalcontrol/artifacts/app-debug.apk)
-4. Deletes the temporary container to keep your system clean.
+### 2. Compile Signed Release Application Package (APK)
+To package, sign, and compile a production-ready application package:
+1. Generate the keystore and properties mapping files:
+   ```bash
+   ./generate_keystore.py
+   ```
+2. Build the signed release using the release switch:
+   ```bash
+   ./build.sh --release
+   ```
+The output APK is stored at: `artifacts/app-release.apk`.
 
 ---
 
-## 🔌 How to Deploy the APK to Your Android Phone
+## Keystore and Credentials Setup
 
-1. Enable **USB Debugging** on your phone (Settings -> About Phone -> Tap *Build Number* 7 times. Go to Developer Options -> enable **USB Debugging**).
-2. Plug your phone into your computer via a USB cable.
-3. Install the newly compiled APK directly onto your phone:
-   ```bash
-   adb install artifacts/app-debug.apk
-   ```
-4. Open the app on your phone and set up your master security PIN!
+### Automated Generation
+Run the root generation utility script:
+```bash
+./generate_keystore.py
+```
+This utility:
+1. Generates a secure, 16-character alphanumeric password.
+2. Automates OpenSSL or JKS keystore generation.
+3. Builds local `keystore.properties` mapped dynamically to Gradle signing configurations.
+4. Outputs the Base64 sequence for remote CI/CD integration.
+
+### Git Protection
+The generated files (`release.keystore` and `keystore.properties`) are strictly excluded inside `.gitignore` and will never be committed to public repositories.
+
+---
+
+## Continuous Integration and Deployment (GitHub Actions)
+
+A pre-configured CI/CD workflow is declared at `.github/workflows/android.yml` to compile and sign production APKs on every repository push.
+
+### Required Secrets Configuration
+To enable signed remote builds, configure the following secrets inside your GitHub Repository settings (Settings -> Secrets and variables -> Actions -> New repository secret):
+
+* `KEYSTORE_BASE64` - Base64 text string generated by the local terminal or python utility script.
+* `KEYSTORE_PASSWORD` - The master keystore password.
+* `KEY_ALIAS` - The alias mapping of the private key (default: `parentalcontrol-alias`).
+* `KEY_PASSWORD` - The key-specific password.
+
+Once the pipeline completes, the signed release APK is available for download directly under the Actions tab as a build artifact.
+
+---
+
+## Physical Device Installation
+To deploy a compiled APK directly to your connected physical test device:
+```bash
+# Debug APK
+adb install artifacts/app-debug.apk
+
+# Signed Release APK
+adb install artifacts/app-release.apk
+```
