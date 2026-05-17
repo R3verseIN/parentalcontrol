@@ -16,6 +16,7 @@ class PinActivity : AppCompatActivity() {
     companion object {
         const val EXTRA_MODE = "extra_mode"
         const val MODE_SETUP = 1
+        const val MODE_UNLOCK = 2
         const val MODE_CHANGE = 3
     }
 
@@ -58,9 +59,7 @@ class PinActivity : AppCompatActivity() {
             passedMode
         } else {
             if (pinManager.isPinSet()) {
-                // PIN is already set, skip setup and go straight to dashboard
-                navigateToMain()
-                return
+                MODE_UNLOCK
             } else {
                 MODE_SETUP
             }
@@ -121,6 +120,7 @@ class PinActivity : AppCompatActivity() {
 
         when (currentMode) {
             MODE_SETUP -> handleSetupFlow(enteredPin)
+            MODE_UNLOCK -> handleUnlockFlow(enteredPin)
             MODE_CHANGE -> handleChangeFlow(enteredPin)
         }
     }
@@ -143,6 +143,15 @@ class PinActivity : AppCompatActivity() {
             } else {
                 resetSetupState("PINs did not match. Let's try again.")
             }
+        }
+    }
+
+    private fun handleUnlockFlow(enteredPin: String) {
+        if (pinManager.verifyPin(enteredPin)) {
+            Toast.makeText(this, "Unlocked!", Toast.LENGTH_SHORT).show()
+            navigateToMain()
+        } else {
+            tvSubtitle.text = "Incorrect PIN. Please try again."
         }
     }
 
@@ -180,6 +189,10 @@ class PinActivity : AppCompatActivity() {
             MODE_SETUP -> {
                 tvTitle.text = "Create PIN"
                 tvSubtitle.text = "Create a security PIN to protect configurations"
+            }
+            MODE_UNLOCK -> {
+                tvTitle.text = "Device Locked"
+                tvSubtitle.text = "Enter your parental control security PIN"
             }
             MODE_CHANGE -> {
                 tvTitle.text = "Verify Security"

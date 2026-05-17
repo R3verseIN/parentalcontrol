@@ -14,6 +14,7 @@ import android.widget.Toast
 import android.view.View
 import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.SwitchCompat
 import com.google.android.material.card.MaterialCardView
 import com.parentalcontrol.R
 import com.parentalcontrol.services.ParentalAccessibilityService
@@ -33,6 +34,9 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var rowAppLimits: LinearLayout
     private lateinit var tvAppGuardStats: TextView
+    private lateinit var rowProtectionShield: LinearLayout
+    private lateinit var switchProtection: SwitchCompat
+    private lateinit var tvShieldStatus: TextView
     private lateinit var rowAccessPin: LinearLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -53,6 +57,9 @@ class MainActivity : AppCompatActivity() {
 
         rowAppLimits = findViewById(R.id.rowAppLimits)
         tvAppGuardStats = findViewById(R.id.tvAppGuardStats)
+        rowProtectionShield = findViewById(R.id.rowProtectionShield)
+        switchProtection = findViewById(R.id.switchProtection)
+        tvShieldStatus = findViewById(R.id.tvShieldStatus)
         rowAccessPin = findViewById(R.id.rowAccessPin)
 
         // Initialize persistent App Blocker memory
@@ -62,6 +69,26 @@ class MainActivity : AppCompatActivity() {
         rowAppLimits.setOnClickListener {
             val intent = Intent(this, AppBlockerActivity::class.java)
             startActivity(intent)
+        }
+
+        // Protection Shield toggle
+        val prefs = getSharedPreferences("parental_control_prefs", Context.MODE_PRIVATE)
+        switchProtection.isChecked = prefs.getBoolean("protection_enabled", true)
+        updateShieldStatusText(switchProtection.isChecked)
+
+        switchProtection.setOnCheckedChangeListener { _, isChecked ->
+            prefs.edit().putBoolean("protection_enabled", isChecked).apply()
+            updateShieldStatusText(isChecked)
+            if (isChecked) {
+                Toast.makeText(this, "Protection Shield enabled", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "Protection Shield disabled", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        // Clicking the row also toggles the switch
+        rowProtectionShield.setOnClickListener {
+            switchProtection.isChecked = !switchProtection.isChecked
         }
 
         // Request Device Admin anti-uninstall prompt on health badge click
@@ -106,6 +133,19 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         updateDashboardHealth()
+        val prefs = getSharedPreferences("parental_control_prefs", Context.MODE_PRIVATE)
+        switchProtection.isChecked = prefs.getBoolean("protection_enabled", true)
+        updateShieldStatusText(switchProtection.isChecked)
+    }
+
+    private fun updateShieldStatusText(enabled: Boolean) {
+        if (enabled) {
+            tvShieldStatus.text = "Block Settings & restricted apps"
+            tvShieldStatus.setTextColor(Color.parseColor("#30D158"))
+        } else {
+            tvShieldStatus.text = "Protection is OFF"
+            tvShieldStatus.setTextColor(Color.parseColor("#FF453A"))
+        }
     }
 
     /**

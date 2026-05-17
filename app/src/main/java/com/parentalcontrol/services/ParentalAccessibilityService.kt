@@ -42,17 +42,12 @@ class ParentalAccessibilityService : AccessibilityService() {
     private var dots: List<View> = emptyList()
     private var currentlyBlockingPackage: String? = null
 
-    // Anti-Bruteforce State
-    private val attemptTimestamps = mutableListOf<Long>()
-    private var lockoutEndTime = 0L
-
     override fun onServiceConnected() {
         super.onServiceConnected()
         BlocklistManager.init(this)
         pinManager = PinManager(this)
         windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
 
-        // Pre-inflate the overlay to ensure zero latency drawing
         preInflateOverlay()
 
         screenOffReceiver = object : android.content.BroadcastReceiver() {
@@ -90,7 +85,6 @@ class ParentalAccessibilityService : AccessibilityService() {
 
             setupNumpad(overlayView!!, tvSubtitle)
 
-            // Handle Back Button gracefully
             overlayView!!.isFocusableInTouchMode = true
             overlayView!!.setOnKeyListener { _, keyCode, keyEvent ->
                 if (keyCode == KeyEvent.KEYCODE_BACK && keyEvent.action == KeyEvent.ACTION_UP) {
@@ -108,76 +102,42 @@ class ParentalAccessibilityService : AccessibilityService() {
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         if (event == null) return
-
-        val eventType = event.eventType
-        if (eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED &&
-            eventType != AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED &&
-            eventType != AccessibilityEvent.TYPE_VIEW_CLICKED) {
-            return
-        }
+        if (event.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) return
 
         val packageName = event.packageName?.toString() ?: return
 
-        // Auto-relock when navigating away
-        if (eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
-            if (packageName != currentlyBlockingPackage && !packageName.startsWith("com.parentalcontrol")) {
-                if (unlockedPackages.isNotEmpty()) {
-                    unlockedPackages.clear()
-                }
+        // Check master protection toggle
+        val prefs = getSharedPreferences("parental_control_prefs", Context.MODE_PRIVATE)
+        if (!prefs.getBoolean("protection_enabled", true)) return
+
+        // Auto-relock when navigating away from unlocked app
+        if (packageName != currentlyBlockingPackage && !packageName.startsWith("com.parentalcontrol")) {
+            if (unlockedPackages.isNotEmpty()) {
+                unlockedPackages.clear()
             }
         }
 
+        // Settings & Package Installer → Instant Back (no overlay, no brute-force window)
+        if (packageName == "com.android.settings" || packageName.contains("packageinstaller")) {
+            if (System.currentTimeMillis() < bypassSafeguardUntil) return
+            if (unlockedPackages.contains(packageName)) return
+
+            Log.w(TAG, "Settings/Installer detected. Firing BACK.")
+            performGlobalAction(GLOBAL_ACTION_BACK)
+            return
+        }
+
+        // Blocked apps → Show PIN overlay
         val isPermanentlyBlocked = BlocklistManager.isBlocked(packageName)
         val isScheduledBlocked = BlocklistManager.isCurrentlyInBlockedSchedule(packageName)
-        val isSettingsOrInstaller = packageName == "com.android.settings" || packageName.contains("packageinstaller")
 
-        if (isPermanentlyBlocked || isScheduledBlocked || isSettingsOrInstaller) {
-            
-            if (isSettingsOrInstaller && System.currentTimeMillis() < bypassSafeguardUntil) {
-                return
-            }
+        if (isPermanentlyBlocked || isScheduledBlocked) {
+            if (unlockedPackages.contains(packageName)) return
 
-            if (unlockedPackages.contains(packageName)) {
-                return
-            }
-
+            Log.w(TAG, "Blocked app detected: $packageName. Showing overlay.")
             currentlyBlockingPackage = packageName
-            handleBlockedAppAttempt()
+            showOverlay()
         }
-    }
-
-    private fun handleBlockedAppAttempt() {
-        val now = System.currentTimeMillis()
-
-        if (now < lockoutEndTime) {
-            // Hard Lockout Active - Destroy the screen with BACK
-            performGlobalAction(GLOBAL_ACTION_BACK)
-            performGlobalAction(GLOBAL_ACTION_BACK)
-            return
-        }
-
-        // Check if overlay is already attached
-        if (overlayView?.parent != null) {
-            return
-        }
-
-        // Track attempts for brute-force defense
-        attemptTimestamps.removeAll { now - it > 10000 } // Clear attempts older than 10s
-        attemptTimestamps.add(now)
-
-        if (attemptTimestamps.size >= 3) {
-            // 3-Strike Rule Tripped -> Activate 30-second Lockout
-            lockoutEndTime = now + 30000
-            Toast.makeText(this, "Too many rapid attempts. Settings locked for 30s.", Toast.LENGTH_LONG).show()
-            
-            // Unwind navigation stack aggressively
-            performGlobalAction(GLOBAL_ACTION_BACK)
-            performGlobalAction(GLOBAL_ACTION_BACK)
-            hideOverlay()
-            return
-        }
-
-        showOverlay()
     }
 
     private fun showOverlay() {
@@ -263,10 +223,6 @@ class ParentalAccessibilityService : AccessibilityService() {
                 unlockedPackages.add(blockedPkg)
             }
             bypassSafeguardUntil = System.currentTimeMillis() + 15000
-            
-            // Clear brute-force trackers upon successful entry
-            attemptTimestamps.clear()
-            
             hideOverlay()
         } else {
             subtitleView.text = "Incorrect PIN. Please try again."
