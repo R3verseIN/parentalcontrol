@@ -237,18 +237,17 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal">
 
-            <Button
+            <ImageButton
                 android:id="@+id/btnDelete"
                 style="?android:attr/borderlessButtonStyle"
                 android:layout_width="72dp"
                 android:layout_height="72dp"
                 android:layout_margin="12dp"
                 android:background="@drawable/btn_round"
-                app:icon="@drawable/ic_backspace"
-                app:iconTint="#E57373"
-                app:iconSize="28dp"
-                app:iconGravity="textStart"
-                android:padding="0dp" />
+                android:src="@drawable/ic_backspace"
+                app:tint="#E57373"
+                android:scaleType="centerInside"
+                android:padding="20dp" />
 
             <Button
                 android:id="@+id/btn0"
@@ -261,18 +260,17 @@
                 android:textColor="#FFFFFF"
                 android:textSize="24sp" />
 
-            <Button
+            <ImageButton
                 android:id="@+id/btnDone"
                 style="?android:attr/borderlessButtonStyle"
                 android:layout_width="72dp"
                 android:layout_height="72dp"
                 android:layout_margin="12dp"
                 android:background="@drawable/btn_round"
-                app:icon="@drawable/ic_done"
-                app:iconTint="#81C784"
-                app:iconSize="28dp"
-                app:iconGravity="textStart"
-                android:padding="0dp" />
+                android:src="@drawable/ic_done"
+                app:tint="#81C784"
+                android:scaleType="centerInside"
+                android:padding="20dp" />
         </LinearLayout>
     </LinearLayout>
 
