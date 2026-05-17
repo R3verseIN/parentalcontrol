@@ -1,0 +1,12 @@
+<resources>
+    <style name="Theme.ParentalControl" parent="Theme.MaterialComponents.NoActionBar">
+        <!-- Core branding colors -->
+        <item name="colorPrimary">#D0BCFF</item>
+        <item name="colorPrimaryVariant">#6200EE</item>
+        <item name="colorOnPrimary">#000000</item>
+        
+        <!-- Background and Window configs -->
+        <item name="android:windowBackground">#121212</item>
+        <item name="android:statusBarColor">#121212</item>
+    </style>
+</resources>

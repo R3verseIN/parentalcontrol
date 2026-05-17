@@ -1,0 +1,54 @@
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# 1. Install System Build Tools and OpenJDK 17
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    openjdk-17-jdk \
+    unzip \
+    wget \
+    zip \
+    git \
+    build-essential \
+    libglu1-mesa \
+    && apt-get clean -y && rm -rf /var/lib/apt/lists/*
+
+# 2. Set up SDK paths (including our custom Gradle 8.0.2 path)
+ENV ANDROID_HOME=/opt/android-sdk
+ENV PATH=${PATH}:${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/platform-tools:${ANDROID_HOME}/build-tools/34.0.0:/opt/gradle-8.0.2/bin
+
+# 3. Download and Install Gradle 8.0.2 directly (perfectly compatible with Java 17)
+RUN wget -q https://services.gradle.org/distributions/gradle-8.0.2-bin.zip -O /tmp/gradle.zip \
+    && unzip -q /tmp/gradle.zip -d /opt \
+    && rm /tmp/gradle.zip
+
+# 4. Download and Install Android SDK Command-line Tools (v11076708)
+RUN mkdir -p ${ANDROID_HOME}/cmdline-tools \
+    && wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O /tmp/cmdline-tools.zip \
+    && unzip -q /tmp/cmdline-tools.zip -d ${ANDROID_HOME}/cmdline-tools \
+    && mv ${ANDROID_HOME}/cmdline-tools/cmdline-tools ${ANDROID_HOME}/cmdline-tools/latest \
+    && rm /tmp/cmdline-tools.zip
+
+# 5. Accept Android Licenses and Install Core SDK Platform Components (API 34)
+RUN yes | sdkmanager --sdk_root=${ANDROID_HOME} --licenses \
+    && sdkmanager --sdk_root=${ANDROID_HOME} \
+    "platform-tools" \
+    "platforms;android-34" \
+    "build-tools;34.0.0"
+
+# 6. Set up workspace folder and copy ONLY build configs first
+WORKDIR /app
+COPY settings.gradle build.gradle gradle.properties /app/
+COPY app/build.gradle /app/app/
+
+# 7. Pre-download Gradle and all project dependencies (creates a highly cached Docker layer)
+RUN gradle wrapper --gradle-version 8.0.2
+RUN ./gradlew :app:dependencies --no-daemon || true
+
+# 8. Copy the actual source files (frequently modified)
+COPY . .
+
+# 9. Perform the final compilation check and build the APK
+# (Accepts BUILD_TASK as a parameter: defaults to assembleDebug, can be overridden to compileDebugKotlin)
+ARG BUILD_TASK=assembleDebug
+RUN ./gradlew $BUILD_TASK

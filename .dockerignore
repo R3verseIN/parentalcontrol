@@ -1,0 +1,7 @@
+.git
+.gitignore
+artifacts
+build.sh
+diagnose.sh
+README.md
+Dockerfile.build
