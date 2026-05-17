@@ -4,13 +4,12 @@ A secure, high-fidelity Android application for parental control, device monitor
 
 ## Visual Identity
 
-### Launcher Icon Mockup
-![Parental Control App Icon](images/parental_control_app_icon.png)
-
-### Application Screenshots
-![Dashboard Screen](images/1.jpeg)
-![App Blocker Screen](images/2.jpeg)
-![Permissions Setup](images/3.jpeg)
+<p align="center">
+  <img src="images/parental_control_app_icon.png" width="22%" alt="Launcher Icon" />
+  <img src="images/1.jpeg" width="22%" alt="Dashboard Screen" />
+  <img src="images/2.jpeg" width="22%" alt="App Blocker Screen" />
+  <img src="images/3.jpeg" width="22%" alt="Permissions Setup" />
+</p>
 
 ---
 
