@@ -1,6 +1,6 @@
 # Parental Control Android Application
 
-A secure, high-fidelity native Android application engineered for parental device control, content monitoring, and application locking. The system is designed with a handcrafted dark-mode dashboard console, local SHA-256 PIN authentication, dynamic accessibility state listeners, and Package Visibility configurations.
+A secure, lightweight native Android application engineered for parental device control, application locking, and settings protection. Uses a zero-latency WindowManager overlay, instant Settings blocking, and Device Admin anti-uninstall to create an impenetrable lock system.
 
 ## Visual Identity
 
@@ -13,102 +13,159 @@ A secure, high-fidelity native Android application engineered for parental devic
 
 ---
 
+## How It Works
+
+The app uses a three-layer protection model that operates entirely on-device with no network dependency:
+
+### Layer 1: Instant Settings & Installer Blocking
+When the child opens **Settings** or the **Package Installer**, the accessibility service detects it and instantly fires `GLOBAL_ACTION_BACK`. This unwinds their navigation stack before they can tap anything, making it impossible to reach the "Uninstall" or "Disable Accessibility" screens. No overlay, no delay, no brute-force window.
+
+### Layer 2: Zero-Latency PIN Overlay for Blocked Apps
+When a blocked app (e.g., YouTube, Games) is opened, a pre-inflated `WindowManager` overlay draws a full-screen PIN lock in under 10 milliseconds. Because it's drawn by the accessibility service itself (not as a separate Activity), it cannot be swiped away from the Recent Apps menu. Correct PIN entry unlocks the app for the current session with a 15-second grace period for parent access.
+
+### Layer 3: Device Admin Anti-Uninstall
+The app registers as a Device Administrator, which prevents standard uninstallation. Combined with the Settings blocking (Layer 1), the child cannot deactivate this protection.
+
+### Protection Shield Toggle
+A master on/off switch in the dashboard lets parents temporarily disable all blocking without touching Android Accessibility settings. When OFF, the service runs but blocks nothing. When ON, full protection is active.
+
+---
+
 ## Key Capabilities
 
-### Handcrafted Dashboard Redesign
-* **Rectangular Status Badges**: Replaced legacy oval layouts with modern, flat 8dp rounded-corner MaterialCardView elements for accessibility and administration states.
-* **Consolidated System Health**: A unified tri-state system health header (Secure, Action Recommended, Unsecured) updates dynamically depending on device permissions.
-* **Borderless Controls Settings**: Replaced card-nested sections with a modern settings console utilizing horizontal dividers, subtle lavender icons, and right chevrons.
+### Protection Shield Toggle
+* **One-Tap Control**: Enable or disable all blocking from the dashboard instantly.
+* **State Persistence**: Toggle state survives app restarts and screen reboots.
+* **Visual Feedback**: Green status text when active, red when disabled.
+
+### Zero-Latency WindowManager Overlay
+* **Pre-Inflated View**: The PIN screen is built in memory when the service starts, not when an app opens.
+* **TYPE_ACCESSIBILITY_OVERLAY**: Draws above all other windows without requiring the "Display over other apps" permission prompt.
+* **Auto-Relock**: Screen sleep clears all unlocked sessions automatically.
 
 ### Installed Package Discovery (Android 11+ Visibility)
-* Resolves Android package visibility sandbox restrictions on API level 30 and above.
-* Declares the QUERY_ALL_PACKAGES permission, enabling queryIntentActivities to scan and list all installed third-party apps (WhatsApp, YouTube, games) to let parents apply restrictions.
+* Resolves package visibility sandbox restrictions on API level 30+.
+* Declares `QUERY_ALL_PACKAGES` permission to scan and list all installed third-party apps for blocking.
+
+### Time-Based Scheduling
+* Set custom blocked time windows per app (e.g., block games 8 AM – 3 PM on school days).
+* Supports overnight ranges (e.g., 9 PM – 7 AM).
+* Overlap detection prevents conflicting schedules.
 
 ### Secure Offline Keystore Generation
-* An automated generator utility builds self-signed production keys locally using OpenSSL or Java Keytool.
-* Dynamic Gradle integration loads credentials from local isolated properties only if present, falling back gracefully to keep public source code safe.
+* Automated generator utility builds self-signed production keys locally using OpenSSL or Java Keytool.
+* Dynamic Gradle integration loads credentials from isolated properties only if present.
+
+---
+
+## Security Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    App Launch Flow                       │
+├─────────────────────────────────────────────────────────┤
+│ App opens → PinActivity (MODE_UNLOCK) → Dashboard        │
+│ (PIN required every time the app is launched)             │
+└─────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────┐
+│                  Protection Flow                         │
+├─────────────────────────────────────────────────────────┤
+│ Settings/Installer opened → GLOBAL_ACTION_BACK (instant) │
+│ Blocked app opened → PIN overlay → Unlock → 15s grace    │
+│ Protection Shield OFF → All blocking disabled             │
+│ Screen off → All sessions cleared                         │
+│ Back button on overlay → Home screen                      │
+└─────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────┐
+│                  Anti-Uninstall Flow                     │
+├─────────────────────────────────────────────────────────┤
+│ Device Admin active → Uninstall button grayed out        │
+│ Settings blocked → Cannot reach Device Admin settings    │
+│ Accessibility blocked → Cannot disable the service       │
+└─────────────────────────────────────────────────────────┘
+```
 
 ---
 
 ## Directory Architecture
 
 * `app/` - Primary application module containing Kotlin sources, XML layouts, and assets.
-* `images/` - Directory for visual assets, launcher mockups, and screenshots.
-* `artifacts/` - Output target directory for generated debug and release APK packages (ignored by Git).
-* `.github/workflows/` - Continuous integration workflow definitions for GitHub Actions.
-* `build.sh` - Compiled sandboxed build script running builds inside isolated Docker containers.
-* `generate_keystore.py` - Automation utility script generating keystores, properties mapping files, and base64 strings.
+* `images/` - Visual assets, launcher mockups, and screenshots.
+* `artifacts/` - Output target for generated debug and release APK packages (ignored by Git).
+* `.github/workflows/` - CI/CD workflow definitions for GitHub Actions.
+* `build.sh` - Sandboxed build script running compilations inside isolated Docker containers.
+* `generate_keystore.py` - Automation utility generating keystores, properties files, and base64 strings.
+
+---
+
+## First-Time Setup
+
+1. **Install the APK** on the child's device via ADB or direct transfer.
+2. **Open the app** — you'll be prompted to create a 6-digit PIN.
+3. **Enable Accessibility Service** — tap the "Service Node" badge in the dashboard, find "Parental Control" in the list, and toggle it on.
+4. **Enable Device Admin** — tap the "Uninstall Lock" badge and confirm the system prompt.
+5. **Toggle Protection Shield ON** — use the switch in the dashboard to activate all blocking.
+
+> **Important**: Both Accessibility and Device Admin must be enabled for full protection. The dashboard shows green indicators when both are active.
 
 ---
 
 ## Local Compilation and Build Pipeline
 
-All compilations run inside an isolated, identical build container via Docker, eliminating the need to install the JDK or Android SDK on the host machine.
+All compilations run inside an isolated Docker container, eliminating the need for a local JDK or Android SDK.
 
 ### Prerequisites
 * Docker engine installed and running.
 * ADB command-line utility for device installation.
 
 ### 1. Compile Unsigned Debug Package
-To run pre-flight syntax validations and compile the unsigned debug package:
 ```bash
 ./build.sh
 ```
-* **Output Package**: `artifacts/app-debug.apk`
+* **Output**: `artifacts/app-debug.apk`
 
 ### 2. Compile Signed Release Package
-To package, sign, and build a release APK using your local secure keystore:
-1. Generate local private credentials:
-   ```bash
-   ./generate_keystore.py
-   ```
-2. Compile using the release switch:
-   ```bash
-   ./build.sh --release
-   ```
-* **Output Package**: `artifacts/app-release.apk`
+```bash
+./generate_keystore.py
+./build.sh --release
+```
+* **Output**: `artifacts/app-release.apk`
 
 ---
 
 ## Secure Keystore Setup and Git Protection
 
 ### Automated Credentials Utility
-Run the root generation utility script:
 ```bash
 ./generate_keystore.py
 ```
-The script performs the following actions:
-1. Generates a secure, 16-character alphanumeric password.
-2. Automates OpenSSL or JKS keystore generation based on system availability.
-3. Builds local `keystore.properties` mapped dynamically to Gradle signing configurations.
-4. Outputs the Base64 representation of the binary keystore for remote CI/CD integration.
+Generates a secure password, creates the keystore, builds `keystore.properties`, and outputs the Base64 string for CI/CD.
 
 ### Git Security
-The files `release.keystore` and `keystore.properties` contain highly sensitive private credentials. They are defined inside `.gitignore` and are strictly excluded from being tracked or pushed to public repositories.
+`release.keystore` and `keystore.properties` are excluded from Git tracking via `.gitignore`. Never commit these files.
 
 ---
 
 ## Continuous Integration and Deployment (GitHub Actions)
 
-A pre-configured CI/CD workflow is declared at `.github/workflows/android.yml` to compile and sign production APKs on every repository push.
+A pre-configured CI/CD workflow at `.github/workflows/android.yml` compiles and signs production APKs on every push.
 
-### Required Repository Secrets Configuration
-To enable signed remote builds, configure the following secrets inside your GitHub Repository settings (Settings -> Secrets and variables -> Actions -> New repository secret):
+### Required Repository Secrets
 
-| Secret Name | Secret Value Source | Description |
+| Secret Name | Value Source | Description |
 | :--- | :--- | :--- |
-| `KEYSTORE_BASE64` | Output from `generate_keystore.py` | Base64 text string representing your binary keystore file. |
-| `KEYSTORE_PASSWORD` | Output from `generate_keystore.py` | The master keystore password. |
-| `KEY_ALIAS` | `parentalcontrol-alias` | The key alias within the keystore. |
-| `KEY_PASSWORD` | Output from `generate_keystore.py` | The key-specific password. |
+| `KEYSTORE_BASE64` | `generate_keystore.py` output | Base64 string of the binary keystore. |
+| `KEYSTORE_PASSWORD` | `generate_keystore.py` output | Master keystore password. |
+| `KEY_ALIAS` | `parentalcontrol-alias` | Key alias within the keystore. |
+| `KEY_PASSWORD` | `generate_keystore.py` output | Key-specific password. |
 
-Once the pipeline completes, the signed release APK is automatically published directly to the **Releases** section of your GitHub repository. You can download the raw, pre-compiled signed `app-release.apk` with a single click from the Releases page (mapped to the `latest` tag).
+Signed APKs are published to the **Releases** section (mapped to the `latest` tag).
 
 ---
 
 ## Physical Device Installation
-
-To deploy a compiled APK directly to your connected physical test device:
 
 ```bash
 # Debug APK
@@ -122,15 +179,21 @@ adb install artifacts/app-release.apk
 
 ## PIN Recovery (Forgot PIN)
 
-If you forget the parental PIN, clear the app data via ADB to reset it:
+Clear the app data via ADB to reset the PIN:
 
 ```bash
 adb shell pm clear com.parentalcontrol
 ```
 
-This wipes the stored PIN hash, blocklist, and all app settings. The next time you open the app, it will prompt you to create a new 6-digit PIN. Device Admin privileges remain intact.
+This wipes the stored PIN hash, blocklist, and all settings. The next launch prompts you to create a new 6-digit PIN.
 
-**Note:** This also resets the Accessibility permission. You must re-enable it:
+**Note:** This also resets the Accessibility permission. Re-enable it:
 1. Go to **Settings → Accessibility → Parental Control**
 2. Toggle the service back on
 3. Confirm in the system dialog
+
+---
+
+## Package Name
+
+`com.parentalcontrol`
