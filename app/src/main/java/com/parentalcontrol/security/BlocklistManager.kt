@@ -146,4 +146,51 @@ object BlocklistManager {
         }
         return count
     }
+
+    /**
+     * Decomposes a standard range string ("HH:mm-HH:mm") into 1 or 2 absolute minute-of-day intervals.
+     */
+    private fun decomposeToIntervals(range: String): List<TimeInterval> {
+        val parts = range.split("-")
+        if (parts.size != 2) return emptyList()
+        val startMin = parseTimeToMinutes(parts[0])
+        val endMin = parseTimeToMinutes(parts[1])
+        if (startMin == -1 || endMin == -1) return emptyList()
+
+        return if (startMin <= endMin) {
+            listOf(TimeInterval(startMin, endMin))
+        } else {
+            // Overnight range split across midnight boundary
+            listOf(TimeInterval(startMin, 1439), TimeInterval(0, endMin))
+        }
+    }
+
+    private fun parseTimeToMinutes(time: String): Int {
+        val parts = time.split(":")
+        if (parts.size != 2) return -1
+        val hour = parts[0].toIntOrNull() ?: return -1
+        val min = parts[1].toIntOrNull() ?: return -1
+        return hour * 60 + min
+    }
+
+    /**
+     * Checks if a proposed range overlaps with any of the existing ranges.
+     */
+    fun doesRangeOverlap(proposedRange: String, existingRanges: Set<String>): Boolean {
+        val proposedIntervals = decomposeToIntervals(proposedRange)
+        for (existing in existingRanges) {
+            val existingIntervals = decomposeToIntervals(existing)
+            for (p in proposedIntervals) {
+                for (e in existingIntervals) {
+                    // Interval overlap: max of starts <= min of ends
+                    if (Math.max(p.start, e.start) <= Math.min(p.end, e.end)) {
+                        return true
+                    }
+                }
+            }
+        }
+        return false
+    }
 }
+
+data class TimeInterval(val start: Int, val end: Int)

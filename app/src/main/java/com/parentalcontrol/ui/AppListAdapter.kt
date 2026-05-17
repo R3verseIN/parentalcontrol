@@ -47,12 +47,16 @@ class AppListAdapter(private var appList: List<AppInfo>) :
         if (app.isBlocked) {
             holder.tvScheduleStatus.text = "Blocked Completely"
             holder.tvScheduleStatus.setTextColor(android.graphics.Color.parseColor("#FF453A")) // Premium Crimson
-        } else if (schedules.isNotEmpty()) {
-            holder.tvScheduleStatus.text = "Schedule: Active (${schedules.size} windows)"
-            holder.tvScheduleStatus.setTextColor(android.graphics.Color.parseColor("#5E5CE6")) // Premium Indigo
+            holder.btnConfigureSchedule.visibility = android.view.View.GONE
         } else {
-            holder.tvScheduleStatus.text = "Always Allowed"
-            holder.tvScheduleStatus.setTextColor(android.graphics.Color.parseColor("#30D158")) // Premium Green
+            holder.btnConfigureSchedule.visibility = android.view.View.VISIBLE
+            if (schedules.isNotEmpty()) {
+                holder.tvScheduleStatus.text = "Schedule: Active (${schedules.size} windows)"
+                holder.tvScheduleStatus.setTextColor(android.graphics.Color.parseColor("#5E5CE6")) // Premium Indigo
+            } else {
+                holder.tvScheduleStatus.text = "Always Allowed"
+                holder.tvScheduleStatus.setTextColor(android.graphics.Color.parseColor("#30D158")) // Premium Green
+            }
         }
 
         // Clear checking listener first to prevent binding trigger loops
@@ -229,8 +233,16 @@ class AppListAdapter(private var appList: List<AppInfo>) :
                         val endMin = endPicker.minute
 
                         val rangeStr = String.format("%02d:%02d-%02d:%02d", startHour, startMin, endHour, endMin)
-                        activeSchedules.add(rangeStr)
-                        refreshList()
+                        if (BlocklistManager.doesRangeOverlap(rangeStr, activeSchedules.toSet())) {
+                            android.widget.Toast.makeText(
+                                context,
+                                "Error: This overlaps with an existing schedule range.",
+                                android.widget.Toast.LENGTH_LONG
+                            ).show()
+                        } else {
+                            activeSchedules.add(rangeStr)
+                            refreshList()
+                        }
                     }
                     endPicker.show(activity.supportFragmentManager, "END_PICKER")
                 }
