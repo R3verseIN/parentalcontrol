@@ -8,12 +8,12 @@
     android:padding="24dp">
 
     <!-- Header Section -->
-    <TextView
-        android:id="@+id/tvIcon"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="🛡️"
-        android:textSize="56sp"
+    <ImageView
+        android:id="@+id/ivIcon"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:src="@drawable/ic_lock"
+        app:tint="#D0BCFF"
         android:layout_marginTop="32dp"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -28,7 +28,7 @@
         android:textSize="24sp"
         android:textStyle="bold"
         android:layout_marginTop="16dp"
-        app:layout_constraintTop_toBottomOf="@id/tvIcon"
+        app:layout_constraintTop_toBottomOf="@id/ivIcon"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
@@ -244,9 +244,11 @@
                 android:layout_height="72dp"
                 android:layout_margin="12dp"
                 android:background="@drawable/btn_round"
-                android:text="⌫"
-                android:textColor="#E57373"
-                android:textSize="22sp" />
+                app:icon="@drawable/ic_backspace"
+                app:iconTint="#E57373"
+                app:iconSize="28dp"
+                app:iconGravity="textStart"
+                android:padding="0dp" />
 
             <Button
                 android:id="@+id/btn0"
@@ -266,9 +268,11 @@
                 android:layout_height="72dp"
                 android:layout_margin="12dp"
                 android:background="@drawable/btn_round"
-                android:text="✓"
-                android:textColor="#81C784"
-                android:textSize="24sp" />
+                app:icon="@drawable/ic_done"
+                app:iconTint="#81C784"
+                app:iconSize="28dp"
+                app:iconGravity="textStart"
+                android:padding="0dp" />
         </LinearLayout>
     </LinearLayout>
 

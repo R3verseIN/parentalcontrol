@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.provider.Settings
 import android.text.TextUtils
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -17,7 +18,7 @@ import com.parentalcontrol.services.ParentalAccessibilityService
 class MainActivity : AppCompatActivity() {
 
     private lateinit var cardAccessibility: MaterialCardView
-    private lateinit var tvIndicator: TextView
+    private lateinit var ivIndicator: ImageView
     private lateinit var tvTitle: TextView
     private lateinit var tvDesc: TextView
     private lateinit var btnEnableAccess: Button
@@ -29,7 +30,7 @@ class MainActivity : AppCompatActivity() {
 
         // Bind layout views
         cardAccessibility = findViewById(R.id.cardAccessibility)
-        tvIndicator = findViewById(R.id.tvAccessStatusIndicator)
+        ivIndicator = findViewById(R.id.ivAccessStatusIndicator)
         tvTitle = findViewById(R.id.tvAccessTitle)
         tvDesc = findViewById(R.id.tvAccessDesc)
         btnEnableAccess = findViewById(R.id.btnEnableAccess)
@@ -89,7 +90,8 @@ class MainActivity : AppCompatActivity() {
         val isEnabled = isAccessibilityServiceEnabled()
         if (isEnabled) {
             // Service Active State
-            tvIndicator.text = "✅"
+            ivIndicator.setImageResource(R.drawable.ic_check_circle)
+            ivIndicator.imageTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#81C784"))
             tvTitle.text = "Parental Service Active"
             tvDesc.text = "System accessibility hooks are connected. App scanning active."
             tvDesc.setTextColor(Color.parseColor("#B3FFFFFF"))
@@ -103,7 +105,8 @@ class MainActivity : AppCompatActivity() {
             btnEnableAccess.backgroundTintList = getColorStateList(android.R.color.darker_gray)
         } else {
             // Service Inactive State
-            tvIndicator.text = "⚠️"
+            ivIndicator.setImageResource(R.drawable.ic_warning)
+            ivIndicator.imageTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#FF8A80"))
             tvTitle.text = "Accessibility Disabled"
             tvDesc.text = "Required to monitor window state changes & secure child activities."
             tvDesc.setTextColor(Color.parseColor("#FFCDD2"))
