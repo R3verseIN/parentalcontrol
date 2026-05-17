@@ -38,8 +38,8 @@ jobs:
     - name: Create GitHub Release and Upload Signed APK
       uses: softprops/action-gh-release@v2
       with:
-        tag_name: latest
-        name: Continuous Signed Release
+        tag_name: release-${{ github.run_number }}
+        name: Build #${{ github.run_number }} - Signed Release
         draft: false
         prerelease: false
         files: artifacts/app-release.apk
