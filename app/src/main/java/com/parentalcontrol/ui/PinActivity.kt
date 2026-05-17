@@ -174,8 +174,17 @@ class PinActivity : AppCompatActivity() {
      */
     private fun handleUnlockFlow(enteredPin: String) {
         if (pinManager.verifyPin(enteredPin)) {
-            val isInterception = intent.getBooleanExtra("is_interception", false)
+            val isInterception = com.parentalcontrol.services.ParentalAccessibilityService.isCurrentlyIntercepting
             if (isInterception) {
+                // Consume the intercept state control flag
+                com.parentalcontrol.services.ParentalAccessibilityService.isCurrentlyIntercepting = false
+                
+                // Enroll the currently blocked package in the session's active unlockedPackages set
+                val blockedPkg = com.parentalcontrol.services.ParentalAccessibilityService.currentlyBlockingPackage
+                if (blockedPkg != null) {
+                    com.parentalcontrol.services.ParentalAccessibilityService.unlockedPackages.add(blockedPkg)
+                }
+                
                 // Set the 15-second grace window to allow the parent to safely modify settings or uninstall the app
                 com.parentalcontrol.services.ParentalAccessibilityService.bypassSafeguardUntil = System.currentTimeMillis() + 15000
                 finish()
@@ -208,8 +217,11 @@ class PinActivity : AppCompatActivity() {
     }
 
     override fun onBackPressed() {
-        val isInterception = intent.getBooleanExtra("is_interception", false)
+        val isInterception = com.parentalcontrol.services.ParentalAccessibilityService.isCurrentlyIntercepting
         if (currentMode == MODE_UNLOCK && isInterception) {
+            // Clear the intercept state control flag on exit
+            com.parentalcontrol.services.ParentalAccessibilityService.isCurrentlyIntercepting = false
+            
             // Redirect to Home screen instead of finishing and exposing the blocked app
             val homeIntent = Intent(Intent.ACTION_MAIN).apply {
                 addCategory(Intent.CATEGORY_HOME)

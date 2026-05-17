@@ -16,7 +16,21 @@ class ParentalAccessibilityService : AccessibilityService() {
         // Timestamp to temporarily bypass settings blocking (15-second grace window for uninstallation)
         @JvmStatic
         var bypassSafeguardUntil: Long = 0
+
+        // Global flag to track whether the active lock screen is an intercept overlay
+        @JvmStatic
+        var isCurrentlyIntercepting: Boolean = false
+
+        // Tracks the package name currently awaiting PIN entry
+        @JvmStatic
+        var currentlyBlockingPackage: String? = null
+
+        // Set of packages authorized to run during the current session
+        @JvmStatic
+        val unlockedPackages = mutableSetOf<String>()
     }
+
+    private var screenOffReceiver: android.content.BroadcastReceiver? = null
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         if (event == null) return
@@ -26,9 +40,23 @@ class ParentalAccessibilityService : AccessibilityService() {
             val packageName = event.packageName?.toString()
             Log.d(TAG, "Foreground App Shift: $packageName")
             
+            // Auto-relock: If the user navigated away from the unlocked app to a non-parental package, clear sessions
+            if (packageName != null && packageName != currentlyBlockingPackage && !packageName.startsWith("com.parentalcontrol")) {
+                if (unlockedPackages.isNotEmpty()) {
+                    Log.d(TAG, "Navigated away from unlocked app. Clearing sessions.")
+                    unlockedPackages.clear()
+                }
+            }
+
             // Check if the foreground application is blocked in parental settings
             if (BlocklistManager.isBlocked(packageName)) {
+                // If it is in the unlocked session list, allow it to run
+                if (unlockedPackages.contains(packageName)) {
+                    return
+                }
+
                 Log.w(TAG, "Intercepted execution of blocked app: $packageName. Launching lock screen overlay.")
+                currentlyBlockingPackage = packageName // Cache package name
                 launchLockGatekeeper()
                 return
             }
@@ -83,11 +111,11 @@ class ParentalAccessibilityService : AccessibilityService() {
     }
 
     private fun launchLockGatekeeper() {
+        isCurrentlyIntercepting = true // Activate state control
         val intent = Intent(this, PinActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
             putExtra(PinActivity.EXTRA_MODE, PinActivity.MODE_UNLOCK)
-            putExtra("is_interception", true)
         }
         startActivity(intent)
     }
@@ -96,9 +124,27 @@ class ParentalAccessibilityService : AccessibilityService() {
         Log.d(TAG, "Accessibility Service Interrupted")
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        if (screenOffReceiver != null) {
+            unregisterReceiver(screenOffReceiver)
+        }
+    }
+
     override fun onServiceConnected() {
         super.onServiceConnected()
         BlocklistManager.init(this)
+
+        // Register dynamic screen off receiver to relock session when screen sleeps
+        screenOffReceiver = object : android.content.BroadcastReceiver() {
+            override fun onReceive(context: android.content.Context?, intent: Intent?) {
+                Log.d(TAG, "Screen lock/sleep registered. Auto-relocking blocked apps.")
+                unlockedPackages.clear()
+            }
+        }
+        val filter = android.content.IntentFilter(Intent.ACTION_SCREEN_OFF)
+        registerReceiver(screenOffReceiver, filter)
+
         Log.d(TAG, "Accessibility Service Connected Successfully!")
     }
 }
