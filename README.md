@@ -117,3 +117,20 @@ adb install artifacts/app-debug.apk
 # Signed Release APK
 adb install artifacts/app-release.apk
 ```
+
+---
+
+## PIN Recovery (Forgot PIN)
+
+If you forget the parental PIN, clear the app data via ADB to reset it:
+
+```bash
+adb shell pm clear com.parentalcontrol
+```
+
+This wipes the stored PIN hash, blocklist, and all app settings. The next time you open the app, it will prompt you to create a new 6-digit PIN. Device Admin privileges remain intact.
+
+**Note:** This also resets the Accessibility permission. You must re-enable it:
+1. Go to **Settings → Accessibility → Parental Control**
+2. Toggle the service back on
+3. Confirm in the system dialog
