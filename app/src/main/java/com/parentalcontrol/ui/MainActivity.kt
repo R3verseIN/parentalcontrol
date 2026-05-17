@@ -7,12 +7,12 @@ import android.graphics.Color
 import android.os.Bundle
 import android.provider.Settings
 import android.text.TextUtils
-import android.widget.Button
-import android.widget.ImageView
 import android.app.admin.DevicePolicyManager
 import com.parentalcontrol.security.ParentalDeviceAdminReceiver
 import android.widget.TextView
 import android.widget.Toast
+import android.view.View
+import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.card.MaterialCardView
 import com.parentalcontrol.R
@@ -20,75 +20,82 @@ import com.parentalcontrol.services.ParentalAccessibilityService
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var cardAccessibility: MaterialCardView
-    private lateinit var ivIndicator: ImageView
-    private lateinit var tvTitle: TextView
-    private lateinit var tvDesc: TextView
-    private lateinit var btnEnableAccess: Button
-    private lateinit var btnChangePin: Button
+    private lateinit var viewGlobalStatusDot: View
+    private lateinit var tvGlobalStatusLabel: TextView
 
-    private lateinit var cardUninstallProtection: MaterialCardView
-    private lateinit var ivUninstallIndicator: ImageView
-    private lateinit var tvUninstallTitle: TextView
-    private lateinit var tvUninstallDesc: TextView
-    private lateinit var btnEnableUninstallProtection: Button
+    private lateinit var badgeAccessibility: MaterialCardView
+    private lateinit var viewAccessDot: View
+    private lateinit var tvAccessStatus: TextView
 
-    private lateinit var cardAppGuard: MaterialCardView
+    private lateinit var badgeDeviceAdmin: MaterialCardView
+    private lateinit var viewAdminDot: View
+    private lateinit var tvAdminStatus: TextView
+
+    private lateinit var rowAppLimits: LinearLayout
     private lateinit var tvAppGuardStats: TextView
+    private lateinit var rowAccessPin: LinearLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         // Bind layout views
-        cardAccessibility = findViewById(R.id.cardAccessibility)
-        ivIndicator = findViewById(R.id.ivAccessStatusIndicator)
-        tvTitle = findViewById(R.id.tvAccessTitle)
-        tvDesc = findViewById(R.id.tvAccessDesc)
-        btnEnableAccess = findViewById(R.id.btnEnableAccess)
-        btnChangePin = findViewById(R.id.btnChangePin)
+        viewGlobalStatusDot = findViewById(R.id.viewGlobalStatusDot)
+        tvGlobalStatusLabel = findViewById(R.id.tvGlobalStatusLabel)
 
-        cardUninstallProtection = findViewById(R.id.cardUninstallProtection)
-        ivUninstallIndicator = findViewById(R.id.ivUninstallIndicator)
-        tvUninstallTitle = findViewById(R.id.tvUninstallTitle)
-        tvUninstallDesc = findViewById(R.id.tvUninstallDesc)
-        btnEnableUninstallProtection = findViewById(R.id.btnEnableUninstallProtection)
+        badgeAccessibility = findViewById(R.id.badgeAccessibility)
+        viewAccessDot = findViewById(R.id.viewAccessDot)
+        tvAccessStatus = findViewById(R.id.tvAccessStatus)
 
-        cardAppGuard = findViewById(R.id.cardAppGuard)
+        badgeDeviceAdmin = findViewById(R.id.badgeDeviceAdmin)
+        viewAdminDot = findViewById(R.id.viewAdminDot)
+        tvAdminStatus = findViewById(R.id.tvAdminStatus)
+
+        rowAppLimits = findViewById(R.id.rowAppLimits)
         tvAppGuardStats = findViewById(R.id.tvAppGuardStats)
+        rowAccessPin = findViewById(R.id.rowAccessPin)
 
         // Initialize persistent App Blocker memory
         com.parentalcontrol.security.BlocklistManager.init(this)
 
-        // Launch App Blocker settings on card click
-        cardAppGuard.setOnClickListener {
+        // Launch App Blocker settings on row click
+        rowAppLimits.setOnClickListener {
             val intent = Intent(this, AppBlockerActivity::class.java)
             startActivity(intent)
         }
 
-        // Request Device Admin anti-uninstall prompt
-        btnEnableUninstallProtection.setOnClickListener {
+        // Request Device Admin anti-uninstall prompt on health badge click
+        badgeDeviceAdmin.setOnClickListener {
+            val devicePolicyManager = getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
             val componentName = ComponentName(this, ParentalDeviceAdminReceiver::class.java)
-            val intent = Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN).apply {
-                putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, componentName)
-                putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, "Protects the parental app from unauthorized uninstallation.")
-            }
-            startActivity(intent)
-        }
-
-        // Request System settings mapping
-        btnEnableAccess.setOnClickListener {
-            try {
-                val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+            if (devicePolicyManager.isAdminActive(componentName)) {
+                Toast.makeText(this, "Uninstall protection is active.", Toast.LENGTH_SHORT).show()
+            } else {
+                val intent = Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN).apply {
+                    putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, componentName)
+                    putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, "Protects the parental app from unauthorized uninstallation.")
+                }
                 startActivity(intent)
-                Toast.makeText(this, "Find 'Parental Control' under installed apps & enable it.", Toast.LENGTH_LONG).show()
-            } catch (e: Exception) {
-                Toast.makeText(this, "Could not open settings automatically.", Toast.LENGTH_SHORT).show()
             }
         }
 
-        // Change PIN button mapping
-        btnChangePin.setOnClickListener {
+        // Request System settings mapping on health badge click
+        badgeAccessibility.setOnClickListener {
+            if (isAccessibilityServiceEnabled()) {
+                Toast.makeText(this, "Accessibility Service is active and securing background windows.", Toast.LENGTH_SHORT).show()
+            } else {
+                try {
+                    val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+                    startActivity(intent)
+                    Toast.makeText(this, "Find 'Parental Control' under installed apps & enable it.", Toast.LENGTH_LONG).show()
+                } catch (e: Exception) {
+                    Toast.makeText(this, "Could not open settings automatically.", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+
+        // Change PIN on row click
+        rowAccessPin.setOnClickListener {
             val intent = Intent(this, PinActivity::class.java).apply {
                 putExtra(PinActivity.EXTRA_MODE, PinActivity.MODE_CHANGE)
             }
@@ -98,18 +105,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        checkAccessibilityStatus()
-        checkDeviceAdminStatus()
-        updateAppGuardStats()
-    }
-
-    /**
-     * Dynamically update the app and schedule statistics displayed on the main dashboard card.
-     */
-    private fun updateAppGuardStats() {
-        val blockedCount = com.parentalcontrol.security.BlocklistManager.getBlockedAppsCount()
-        val schedulesCount = com.parentalcontrol.security.BlocklistManager.getActiveSchedulesCount()
-        tvAppGuardStats.text = "$blockedCount apps restricted | $schedulesCount active schedules"
+        updateDashboardHealth()
     }
 
     /**
@@ -135,73 +131,59 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * Update the card and text color to match the system permission status.
+     * Consolidated function to update all dynamic status and chip visuals inside parent dashboard in one go.
      */
-    private fun checkAccessibilityStatus() {
-        val isEnabled = isAccessibilityServiceEnabled()
-        if (isEnabled) {
-            // Service Active State
-            ivIndicator.setImageResource(R.drawable.ic_check_circle)
-            ivIndicator.imageTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#81C784"))
-            tvTitle.text = "Parental Service Active"
-            tvDesc.text = "System accessibility hooks are connected. App scanning active."
-            tvDesc.setTextColor(Color.parseColor("#B3FFFFFF"))
-            
-            // Set card highlights to safe green color
-            cardAccessibility.strokeColor = Color.parseColor("#81C784")
-            
-            // Modify button
-            btnEnableAccess.text = "Service Running (Active)"
-            btnEnableAccess.isEnabled = false
-            btnEnableAccess.backgroundTintList = getColorStateList(android.R.color.darker_gray)
-        } else {
-            // Service Inactive State
-            ivIndicator.setImageResource(R.drawable.ic_warning)
-            ivIndicator.imageTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#FF8A80"))
-            tvTitle.text = "Accessibility Disabled"
-            tvDesc.text = "Required to monitor window state changes & secure child activities."
-            tvDesc.setTextColor(Color.parseColor("#FFCDD2"))
-            
-            // Set card highlight to warning color
-            cardAccessibility.strokeColor = Color.parseColor("#FF8A80")
-            
-            // Restore button
-            btnEnableAccess.text = "Enable Service"
-            btnEnableAccess.isEnabled = true
-            btnEnableAccess.backgroundTintList = getColorStateList(android.R.color.holo_red_light)
-        }
-    }
-
-    /**
-     * Update the anti-uninstall card status dynamically based on Device Admin settings.
-     */
-    private fun checkDeviceAdminStatus() {
+    private fun updateDashboardHealth() {
+        val isAccessActive = isAccessibilityServiceEnabled()
+        
         val devicePolicyManager = getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
         val componentName = ComponentName(this, ParentalDeviceAdminReceiver::class.java)
-        val isCustomAdminActive = devicePolicyManager.isAdminActive(componentName)
+        val isAdminActive = devicePolicyManager.isAdminActive(componentName)
 
-        if (isCustomAdminActive) {
-            ivUninstallIndicator.setImageResource(R.drawable.ic_check_circle)
-            ivUninstallIndicator.imageTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#81C784"))
-            tvUninstallTitle.text = "Uninstall Locked"
-            tvUninstallDesc.text = "Device Administrator is active. Direct uninstallation disabled."
-            tvUninstallDesc.setTextColor(Color.parseColor("#B3FFFFFF"))
-            cardUninstallProtection.strokeColor = Color.parseColor("#81C784")
-
-            btnEnableUninstallProtection.text = "Protection Active"
-            btnEnableUninstallProtection.isEnabled = false
-            btnEnableUninstallProtection.backgroundTintList = getColorStateList(android.R.color.darker_gray)
+        // 1. Update Accessibility Badge
+        if (isAccessActive) {
+            viewAccessDot.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#34C759")) // Neon Mint Green
+            tvAccessStatus.text = "Active"
+            tvAccessStatus.setTextColor(Color.parseColor("#34C759"))
+            badgeAccessibility.setCardBackgroundColor(android.content.res.ColorStateList.valueOf(Color.parseColor("#1D1D21")))
         } else {
-            ivUninstallIndicator.setImageResource(R.drawable.ic_warning)
-            ivUninstallIndicator.imageTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#FF8A80"))
-            tvUninstallTitle.text = "Uninstall Unprotected"
-            tvUninstallDesc.text = "Activate Device Admin to lock settings and block uninstallation."
-            tvUninstallDesc.setTextColor(Color.parseColor("#FFCDD2"))
-            cardUninstallProtection.strokeColor = Color.parseColor("#FF8A80")
-
-            btnEnableUninstallProtection.text = "Activate Protection"
-            btnEnableUninstallProtection.isEnabled = true
-            btnEnableUninstallProtection.backgroundTintList = getColorStateList(android.R.color.holo_red_light)
+            viewAccessDot.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#FF453A")) // Neon Red
+            tvAccessStatus.text = "Disabled (Tap)"
+            tvAccessStatus.setTextColor(Color.parseColor("#FF453A"))
+            badgeAccessibility.setCardBackgroundColor(android.content.res.ColorStateList.valueOf(Color.parseColor("#26FF453A"))) // Translucent rose highlights on error state!
         }
+
+        // 2. Update Device Admin Badge
+        if (isAdminActive) {
+            viewAdminDot.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#34C759"))
+            tvAdminStatus.text = "Locked"
+            tvAdminStatus.setTextColor(Color.parseColor("#34C759"))
+            badgeDeviceAdmin.setCardBackgroundColor(android.content.res.ColorStateList.valueOf(Color.parseColor("#1D1D21")))
+        } else {
+            viewAdminDot.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#FFCC00")) // Amber
+            tvAdminStatus.text = "Unprotected (Tap)"
+            tvAdminStatus.setTextColor(Color.parseColor("#FFCC00"))
+            badgeDeviceAdmin.setCardBackgroundColor(android.content.res.ColorStateList.valueOf(Color.parseColor("#26FFCC00"))) // Translucent amber highlights on warning state!
+        }
+
+        // 3. Update Dynamic Global Security status
+        if (isAccessActive && isAdminActive) {
+            viewGlobalStatusDot.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#34C759"))
+            tvGlobalStatusLabel.text = "System Secure"
+            tvGlobalStatusLabel.setTextColor(Color.parseColor("#34C759"))
+        } else if (!isAccessActive && !isAdminActive) {
+            viewGlobalStatusDot.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#FF453A"))
+            tvGlobalStatusLabel.text = "System Unsecured"
+            tvGlobalStatusLabel.setTextColor(Color.parseColor("#FF453A"))
+        } else {
+            viewGlobalStatusDot.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#FFCC00"))
+            tvGlobalStatusLabel.text = "Action Recommended"
+            tvGlobalStatusLabel.setTextColor(Color.parseColor("#FFCC00"))
+        }
+
+        // 4. Update Dynamic Statistics
+        val blockedCount = com.parentalcontrol.security.BlocklistManager.getBlockedAppsCount()
+        val schedulesCount = com.parentalcontrol.security.BlocklistManager.getActiveSchedulesCount()
+        tvAppGuardStats.text = "$blockedCount apps restricted | $schedulesCount active schedules"
     }
 }

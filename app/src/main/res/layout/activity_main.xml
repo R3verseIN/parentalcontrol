@@ -4,81 +4,104 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#121212"
-    android:padding="20dp">
+    android:background="#121214"
+    android:padding="24dp">
 
-    <!-- Header Control Area -->
+    <!-- 1. Integrated Hero Status Panel (Clean Header, No Cards!) -->
     <LinearLayout
-        android:id="@+id/layoutMainHeader"
+        android:id="@+id/layoutHeroHeader"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="16dp"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent">
 
         <ImageView
-            android:layout_width="32dp"
-            android:layout_height="32dp"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
             android:src="@drawable/ic_shield"
-            app:tint="#D0BCFF"
-            android:layout_marginEnd="10dp" />
+            app:tint="#A29BFE"
+            android:layout_marginEnd="12dp" />
 
         <TextView
-            android:id="@+id/tvMainHeaderTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Parent Dashboard"
+            android:text="Parental Console"
             android:textColor="#FFFFFF"
-            android:textSize="24sp"
+            android:textSize="22sp"
             android:textStyle="bold" />
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/tvMainHeaderSubtitle"
+    <!-- Organic Pulsing Security Node Status -->
+    <LinearLayout
+        android:id="@+id/layoutGlobalNodeStatus"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Security Node: Active"
-        android:textColor="#80FFFFFF"
-        android:textSize="14sp"
-        android:layout_marginTop="4dp"
-        app:layout_constraintTop_toBottomOf="@id/layoutMainHeader"
-        app:layout_constraintStart_toStartOf="parent" />
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toBottomOf="@id/layoutHeroHeader"
+        app:layout_constraintStart_toStartOf="parent">
 
-    <!-- 1. System Accessibility Permission Card -->
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/cardAccessibility"
+        <View
+            android:id="@+id/viewGlobalStatusDot"
+            android:layout_width="8dp"
+            android:layout_height="8dp"
+            android:background="@drawable/btn_round"
+            android:backgroundTint="#34C759"
+            android:layout_marginEnd="8dp" />
+
+        <TextView
+            android:id="@+id/tvGlobalStatusLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="System Secure"
+            android:textColor="#34C759"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <!-- 2. Consolidated Horizontal Health Status Badges -->
+    <LinearLayout
+        android:id="@+id/layoutHealthBadges"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:orientation="horizontal"
         android:layout_marginTop="24dp"
-        app:cardCornerRadius="16dp"
-        app:cardElevation="2dp"
-        app:cardBackgroundColor="#1E1E1E"
-        app:strokeWidth="1dp"
-        app:layout_constraintTop_toBottomOf="@id/tvMainHeaderSubtitle"
+        app:layout_constraintTop_toBottomOf="@id/layoutGlobalNodeStatus"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <LinearLayout
-            android:layout_width="match_parent"
+        <!-- Badge 1: Accessibility Status -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/badgeAccessibility"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="20dp">
+            android:layout_weight="1"
+            android:layout_marginEnd="6dp"
+            app:cardCornerRadius="8dp"
+            app:cardBackgroundColor="#1D1D21"
+            app:strokeWidth="0dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?android:attr/selectableItemBackground">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:gravity="center_vertical"
+                android:padding="12dp">
 
-                <ImageView
-                    android:id="@+id/ivAccessStatusIndicator"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:src="@drawable/ic_warning"
-                    app:tint="#FF8A80"
-                    android:layout_marginEnd="12dp" />
+                <View
+                    android:id="@+id/viewAccessDot"
+                    android:layout_width="6dp"
+                    android:layout_height="6dp"
+                    android:background="@drawable/btn_round"
+                    android:backgroundTint="#FF453A"
+                    android:layout_marginEnd="8dp" />
 
                 <LinearLayout
                     android:layout_width="0dp"
@@ -87,217 +110,139 @@
                     android:orientation="vertical">
 
                     <TextView
-                        android:id="@+id/tvAccessTitle"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Accessibility Service"
-                        android:textColor="#FFFFFF"
-                        android:textSize="16sp"
+                        android:text="Service Node"
+                        android:textColor="#8E8E93"
+                        android:textSize="10sp"
                         android:textStyle="bold" />
 
                     <TextView
-                        android:id="@+id/tvAccessDesc"
+                        android:id="@+id/tvAccessStatus"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Required to monitor window state changes &amp; block unauthorized apps."
-                        android:textColor="#80FFFFFF"
+                        android:text="Disabled (Tap)"
+                        android:textColor="#FF453A"
                         android:textSize="12sp"
-                        android:layout_marginTop="4dp" />
-                </LinearLayout>
-            </LinearLayout>
-
-            <!-- Large tactile setting redirect button -->
-            <Button
-                android:id="@+id/btnEnableAccess"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Enable Service"
-                android:textColor="#FFFFFF"
-                android:backgroundTint="#FF8A80"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:layout_marginTop="16dp"
-                app:cornerRadius="8dp" />
-        </LinearLayout>
-    </com.google.android.material.card.MaterialCardView>
-
-    <!-- 1.5. Anti-Uninstall Protection Card -->
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/cardUninstallProtection"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        app:cardCornerRadius="16dp"
-        app:cardElevation="2dp"
-        app:cardBackgroundColor="#1E1E1E"
-        app:strokeWidth="1dp"
-        app:layout_constraintTop_toBottomOf="@id/cardAccessibility"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="20dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
-
-                <ImageView
-                    android:id="@+id/ivUninstallIndicator"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:src="@drawable/ic_warning"
-                    app:tint="#FF8A80"
-                    android:layout_marginEnd="12dp" />
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:id="@+id/tvUninstallTitle"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Anti-Uninstall Protection"
-                        android:textColor="#FFFFFF"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/tvUninstallDesc"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Requires Device Admin active to disable uninstallation."
-                        android:textColor="#FFCDD2"
-                        android:textSize="12sp"
+                        android:textStyle="bold"
                         android:layout_marginTop="2dp" />
                 </LinearLayout>
             </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
-            <Button
-                android:id="@+id/btnEnableUninstallProtection"
-                style="@style/Widget.MaterialComponents.Button"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="Activate Protection"
-                android:textColor="#FFFFFF"
-                android:textSize="14sp"
-                app:backgroundTint="#E57373"
-                app:cornerRadius="8dp" />
-        </LinearLayout>
-    </com.google.android.material.card.MaterialCardView>
-
-    <!-- 2. Security Configurations Card -->
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/cardSecurity"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        app:cardCornerRadius="16dp"
-        app:cardElevation="2dp"
-        app:cardBackgroundColor="#1E1E1E"
-        app:layout_constraintTop_toBottomOf="@id/cardUninstallProtection"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-
-        <LinearLayout
-            android:layout_width="match_parent"
+        <!-- Badge 2: Uninstall Protection -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/badgeDeviceAdmin"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="20dp">
+            android:layout_weight="1"
+            android:layout_marginStart="6dp"
+            app:cardCornerRadius="8dp"
+            app:cardBackgroundColor="#1D1D21"
+            app:strokeWidth="0dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?android:attr/selectableItemBackground">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Authentication Settings"
-                android:textColor="#FFFFFF"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Update your parental lock credentials securely."
-                android:textColor="#80FFFFFF"
-                android:textSize="12sp"
-                android:layout_marginTop="2dp" />
-
-            <Button
-                android:id="@+id/btnChangePin"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Change Parental PIN"
-                android:textColor="#D0BCFF"
-                app:strokeColor="#D0BCFF"
-                app:strokeWidth="1dp"
-                app:icon="@drawable/ic_key"
-                app:iconTint="#D0BCFF"
-                app:iconSize="18dp"
-                app:iconPadding="8dp"
-                app:iconGravity="textStart"
-                android:textSize="14sp"
-                android:layout_marginTop="16dp"
-                app:cornerRadius="8dp" />
-        </LinearLayout>
-    </com.google.android.material.card.MaterialCardView>
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:padding="12dp">
 
-    <!-- 3. Active Parental Modules -->
+                <View
+                    android:id="@+id/viewAdminDot"
+                    android:layout_width="6dp"
+                    android:layout_height="6dp"
+                    android:background="@drawable/btn_round"
+                    android:backgroundTint="#FF453A"
+                    android:layout_marginEnd="8dp" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Uninstall Lock"
+                        android:textColor="#8E8E93"
+                        android:textSize="10sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvAdminStatus"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Unprotected"
+                        android:textColor="#FF453A"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:layout_marginTop="2dp" />
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+    </LinearLayout>
+
+    <View
+        android:id="@+id/dividerTop"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#0DFFFFFF"
+        android:layout_marginTop="28dp"
+        app:layout_constraintTop_toBottomOf="@id/layoutHealthBadges"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- 3. Borderless Premium Settings List Deck -->
     <TextView
-        android:id="@+id/tvAdvancedTitle"
+        android:id="@+id/tvModulesHeader"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Parental Modules"
-        android:textColor="#80FFFFFF"
-        android:textSize="14sp"
+        android:text="Console Settings"
+        android:textColor="#8E8E93"
+        android:textSize="12sp"
         android:textStyle="bold"
         android:layout_marginTop="24dp"
-        app:layout_constraintTop_toBottomOf="@id/cardSecurity"
+        app:layout_constraintTop_toBottomOf="@id/dividerTop"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/cardAppGuard"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:orientation="vertical"
         android:layout_marginTop="12dp"
-        app:cardCornerRadius="16dp"
-        app:cardElevation="2dp"
-        app:cardBackgroundColor="#1E1E1E"
-        app:strokeColor="#335E5CE6"
-        app:strokeWidth="1dp"
-        android:clickable="true"
-        android:focusable="true"
-        android:foreground="?android:attr/selectableItemBackground"
-        app:layout_constraintTop_toBottomOf="@id/tvAdvancedTitle"
+        app:layout_constraintTop_toBottomOf="@id/tvModulesHeader"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
+        <!-- Row 1: App Guard Blocker & Scheduler Limits -->
         <LinearLayout
+            android:id="@+id/rowAppLimits"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:padding="20dp">
+            android:paddingVertical="16dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?android:attr/selectableItemBackground">
 
+            <!-- Rounded Indigo Icon Circle -->
             <FrameLayout
-                android:layout_width="48dp"
-                android:layout_height="48dp"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
                 android:background="@drawable/btn_round"
-                android:backgroundTint="#265E5CE6"
+                android:backgroundTint="#13A29BFE"
                 android:layout_marginEnd="16dp">
                 <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
                     android:src="@drawable/ic_shield"
-                    app:tint="#5E5CE6"
+                    app:tint="#A29BFE"
                     android:layout_gravity="center" />
             </FrameLayout>
 
@@ -310,9 +255,9 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="App &amp; Time Restriction Guard"
+                    android:text="App &amp; Time Restrictions"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="15sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -320,9 +265,9 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="0 apps restricted | 0 active schedules"
-                    android:textColor="#80FFFFFF"
-                    android:textSize="12sp"
-                    android:layout_marginTop="4dp" />
+                    android:textColor="#8E8E93"
+                    android:textSize="13sp"
+                    android:layout_marginTop="2dp" />
             </LinearLayout>
 
             <ImageView
@@ -330,8 +275,79 @@
                 android:layout_height="20dp"
                 android:src="@drawable/ic_arrow_back"
                 android:rotation="180"
-                app:tint="#80FFFFFF" />
+                app:tint="#44FFFFFF" />
         </LinearLayout>
-    </com.google.android.material.card.MaterialCardView>
+
+        <!-- Divider Row -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#0DFFFFFF" />
+
+        <!-- Row 2: Change Lock Pin -->
+        <LinearLayout
+            android:id="@+id/rowAccessPin"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingVertical="16dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?android:attr/selectableItemBackground">
+
+            <!-- Rounded Key Icon Circle -->
+            <FrameLayout
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:background="@drawable/btn_round"
+                android:backgroundTint="#13D0BCFF"
+                android:layout_marginEnd="16dp">
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_key"
+                    app:tint="#D0BCFF"
+                    android:layout_gravity="center" />
+            </FrameLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Access Control Passcode"
+                    android:textColor="#FFFFFF"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Modify your Master Security PIN"
+                    android:textColor="#8E8E93"
+                    android:textSize="13sp"
+                    android:layout_marginTop="2dp" />
+            </LinearLayout>
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/ic_arrow_back"
+                android:rotation="180"
+                app:tint="#44FFFFFF" />
+        </LinearLayout>
+        
+        <!-- Divider Bottom -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#0DFFFFFF" />
+
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
