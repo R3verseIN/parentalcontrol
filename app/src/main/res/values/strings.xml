@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">Parental Control</string>
     <string name="accessibility_description">Monitors and manages child device activity, allowing you to restrict application launching and secure the device state.</string>
+    <string name="device_admin_description">Protects the parental app from unauthorized uninstallation or disabling.</string>
 </resources>
