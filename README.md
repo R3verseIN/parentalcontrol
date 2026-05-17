@@ -62,28 +62,28 @@ A master on/off switch in the dashboard lets parents temporarily disable all blo
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                    App Launch Flow                       │
+│                    App Launch Flow                      │
 ├─────────────────────────────────────────────────────────┤
-│ App opens → PinActivity (MODE_UNLOCK) → Dashboard        │
-│ (PIN required every time the app is launched)             │
+│ App opens → PinActivity (MODE_UNLOCK) → Dashboard       │
+│ (PIN required every time the app is launched)           │
 └─────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────┐
-│                  Protection Flow                         │
+│                  Protection Flow                        │
 ├─────────────────────────────────────────────────────────┤
-│ Settings/Installer opened → GLOBAL_ACTION_BACK (instant) │
-│ Blocked app opened → PIN overlay → Unlock → 15s grace    │
-│ Protection Shield OFF → All blocking disabled             │
-│ Screen off → All sessions cleared                         │
-│ Back button on overlay → Home screen                      │
+│ Settings/Installer opened → GLOBAL_ACTION_BACK (instant)│
+│ Blocked app opened → PIN overlay → Unlock → 15s grace   │
+│ Protection Shield OFF → All blocking disabled           │
+│ Screen off → All sessions cleared                       │
+│ Back button on overlay → Home screen                    │
 └─────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────┐
-│                  Anti-Uninstall Flow                     │
+│                  Anti-Uninstall Flow                    │
 ├─────────────────────────────────────────────────────────┤
-│ Device Admin active → Uninstall button grayed out        │
-│ Settings blocked → Cannot reach Device Admin settings    │
-│ Accessibility blocked → Cannot disable the service       │
+│ Device Admin active → Uninstall button grayed out       │
+│ Settings blocked → Cannot reach Device Admin settings   │
+│ Accessibility blocked → Cannot disable the service      │
 └─────────────────────────────────────────────────────────┘
 ```
 
