@@ -102,7 +102,7 @@ To enable signed remote builds, configure the following secrets inside your GitH
 | `KEY_ALIAS` | `parentalcontrol-alias` | The key alias within the keystore. |
 | `KEY_PASSWORD` | Output from `generate_keystore.py` | The key-specific password. |
 
-Once the pipeline completes, the signed release APK is available for download directly under the Actions tab as a build artifact.
+Once the pipeline completes, the signed release APK is automatically published directly to the **Releases** section of your GitHub repository. You can download the raw, pre-compiled signed `app-release.apk` with a single click from the Releases page (mapped to the `latest` tag).
 
 ---
 

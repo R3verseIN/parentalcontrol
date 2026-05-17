@@ -40,10 +40,6 @@ jobs:
       with:
         tag_name: latest
         name: Continuous Signed Release
-        body: |
-          Automatic compilation of the signed production release APK.
-          
-          This release is compiled and signed dynamically inside a secure, isolated Docker sandbox on every push to the `main` branch.
         draft: false
         prerelease: false
         files: artifacts/app-release.apk
